@@ -1,0 +1,352 @@
+# CIS 277A Lab 7 Assignment
+## Visualizing Data
+## Imports & Setup
+### Import *SQL Connector*, *pandas*, *matplotlib*, *seaborn*, *numpy*
+### Define explore() function
+Define a function that applies the following methods to the DataFrame: \
+     - **.info()**: returns the column names, non-Null counts, and data types for all columns \
+     - **.nunique()**: displays the number of unique values in each column \
+     - **.apply(pd.unique)**: applies unique method to each of the columns in the DataFrame\
+import pyodbc
+import pandas as pd
+import matplotlib.pyplot as plt
+%matplotlib inline
+import seaborn as sns
+import numpy as np
+
+def explore(df):
+    df.info()
+    print("============================================\n")
+    print(df.nunique())
+    print("============================================\n")
+    print(df.apply(pd.unique))
+
+## Connection 1 - SQL Connection 
+### Open a DataBase Connection 
+Assign the database/server connection to a variable named *'connection'* \
+Use the **AP** database from cisdbss.pdd.ecu \
+Print the connection 
+connection = pyodbc.connect(
+    server="cisdbss.pcc.edu",
+    user="275student",
+    password="275student",
+    database="AP",
+    driver="{ODBC Driver 17 for SQL Server}"
+)
+
+connection
+
+
+## Make the DataFrame 
+### Create and read an SQL query
+Create an SQL query and assign it to a variable named *'df_vendors'* \
+Create a seperate SQL query and assign it to a variable named *'df_invoices'* \
+Use the **.read_sql_query()** function to execute the queries \
+Other methods will be used to join the dataframes \
+**explore()** the dataframes
+df_vendors = pd.read_sql_query("""
+SELECT VendorName, VendorCity, VendorState
+FROM Vendors 
+""", connection)
+
+df_invoices = pd.read_sql_query("""
+SELECT InvoiceTotal, InvoiceDueDate, PaymentDate
+FROM Invoices 
+""", connection)
+
+explore(df_vendors)
+explore(df_invoices)
+## Clean & Prepare the Data
+### Join the DataFrames
+Use the **.join()** method to join the Vendors and Invoices DataFrames using a shared index \
+Assign the joined DataFrames to a new variable 
+df_joined = df_vendors.join(df_invoices)
+df_joined
+### Change the Date Display
+Use the **.copy()** method to create a duplicate of *df_joined* before making changes \
+Convert the *InvoiceDueDate* and *PaymentDate* column values to datetime objects using **pd.to_datetime()** \
+Use the **.dt.strftime("%m-%Y")** method to format both date columns the MM-YYYY format 
+formatted1 = df_joined.copy()
+date_cols = ["InvoiceDueDate", "PaymentDate"]
+formatted1[date_cols] = formatted1[date_cols].apply(pd.to_datetime)
+formatted1["InvoiceDueDate"] = formatted1["InvoiceDueDate"].dt.strftime("%m-%Y")
+formatted1["PaymentDate"] = formatted1["PaymentDate"].dt.strftime("%m-%Y")
+formatted1
+### Find Unpaid Invoices 
+Return *unpaid* invoices greater than 0 only \
+Use the **.isna()** and **.query()** methods \
+Only NA values in the PaymentDate column will return
+query1 = formatted1[formatted1["PaymentDate"].isna()]
+query1 = query1.query("InvoiceTotal > 0")
+query1
+### Add a Column 
+#### Define a function that flags unpaid invoices 
+Write a function that displays the following:
+
+   - If the invoice total is greater than 1000 - return "High" 
+   - If the invoice total is between 500 and 1000 - return "Moderate" 
+   - If the invoice total is less than 500 - return "Low" 
+     
+Apply the function to a copy of *query1* named **newFrame** and attach results in a new column \
+Display **newFrame**
+def invoice_value(invoice):
+    if (invoice < 500):
+        return "Low"
+    elif (invoice >= 500 and invoice < 1000):
+        return "Moderate"
+    else:
+        return "High"
+
+newFrame =  query1[["VendorName", "VendorState", "InvoiceTotal", "InvoiceDueDate"]].copy()
+newFrame["InvoiceFlag"] = newFrame["InvoiceTotal"].apply(invoice_value)
+newFrame
+## Indexing 
+### Set an Index 
+Convert a Column to the index \
+Use the **set_index()** method to change the DataFrame index \
+Use the new *InvoiceFlag* column as the index \
+Sort the results in descending order
+indexed = newFrame.set_index("InvoiceFlag").sort_values(by="InvoiceTotal", ascending=False)
+indexed
+### Reset the Index 
+Return the Index back to the Index Column \
+Use **reset_index()** to avoid future erros and to convert the index back into a regular column 
+reset_df = indexed.reset_index()
+reset_df
+## Shape the Data
+### Pivot the Data using .pivot_table()
+Use the **.pivot_table()** method to reshape the DataFrame into long format \
+Use *InvoiceFlag* and *VendorName* as the indexes for the table \
+Display the *InvoiceTotal* as the values in the column
+df_pivoted = reset_df.pivot_table(
+    index=["InvoiceFlag", "VendorName"],
+    columns="InvoiceDueDate",
+    values="InvoiceTotal"
+)
+df_pivoted
+### Group the Data by InvoiceFlag
+#### Use the .groupby() method
+Group the DataFrame by the InvoiceFlag values \
+Display the average unpaid invoice amount by Flag category \
+Round the results to two decimal places
+df_grouped = reset_df.groupby(["InvoiceFlag", "VendorState"]).agg(
+    AveragePastDue=("InvoiceTotal", "mean"),
+    InvoiceCount=("VendorName", "count")
+)
+df_grouped = df_grouped.round(2)
+df_grouped
+## Preview the Data 
+### Use the .plot.bar() method 
+Display the Count of Unpaid Invoices by Flag Status \
+Use Flag Status as the X-axis
+df_grouped.plot.bar(
+    y="InvoiceCount",
+    title="Count of Unpaid Invoices by Flag Status"
+)
+## Visualizations
+### Seaborn Visualization 1 - Distribution of Invoices Across States 
+Show the distribution of invoices across the states \
+Use **sns.displot()** method with *'kind='hist'*
+f = sns.displot(data=formatted1, kind='hist', x='VendorState', hue='VendorState', legend=False, aspect=1.5)
+plt.title("Total Invoice Count by State")
+for axis in f.axes.flat:
+    axis.tick_params('x', labelrotation=90),
+    axis.set_xlabel('Vendor State'), 
+    axis.set_ylabel('Count (Invoices)')
+## Vector vs Raster
+### Which format to choose?
+Raster images (PNG) are pixel based and can lose quality when scaled \
+     - Use PNG for images that do not need much scaling (bar/hist charts) \
+Vector images (SVG) use mathematical paths, keeping crisp edges regardless of size \
+     - Use SVG for images that require more scaling (scatter plots, box plots)
+### Save & Export Visualization 1
+Visualization 1 does not need much scaling for the information \
+Use *png* format for visualization
+f.savefig('StateInvoiceCount.png')
+### Seaborn Visualization 2 - Vendors with Unpaid Invoices 
+Use **sns.relplot()** with the *kind='scatter'* to show a relationship between VendorName and InvoiceTotal \
+Rotate the labels on the *x-axis* to improve readability 
+g = sns.relplot(data=reset_df, kind='scatter', x='VendorName', y='InvoiceTotal', hue='InvoiceFlag', s=150)
+plt.title('Unpaid Invoice Flag Status by Vendor')
+for axis in g.axes.flat:
+    axis.tick_params('x', labelrotation=90)
+    axis.tick_params('y', labelrotation=45)
+    axis.set_xlabel('Vendor Name'),
+    axis.set_ylabel('Invoice Total ($)')
+### Save & Export Visualization 2
+Visualization 2 could benefit from scaling, so vector is preferred here \
+Use *svg* format for image
+g.savefig('VendorUnpaidFlagTotal.svg')
+### Seaborn Visualization 3 - Distribution of Unpaid Invoices by State 
+Use **sns.catplot()** with the *kind='hist'* to show the distribution of unpaid invoices by state 
+h = sns.catplot(data=df_grouped, kind='bar', x='VendorState', y="InvoiceCount", hue='InvoiceFlag', legend=True)
+plt.title('Unpaid Invoices by State')
+for axis in h.axes.flat:
+    axis.set_ylabel('Count'),
+    axis.set_xlabel('Vendor State'),
+    axis.set_ylabel('Count (Invoices)')
+### Save & Export Visualization 3
+As with Visualization 1, Visualization 3 does not need much scaling \
+Use *png* format for image
+h.savefig('UnpaidFlagCountByState.png')
+## Connection 2 - CSV File-Based Connection
+### Read CSV File
+Dataset used - **IMDB Top 250 Movies** \
+Create a variable *'iMDB'* and assign it a value that uses the **.read_csv()** function \
+The CSV file name is the file path argument passed into the **.read_csv()** function \
+Print *'iMDB'* to verify the import and to inspect the initial dataset
+iMDB = pd.read_csv('IMDBmovies250.csv')
+
+iMDB
+### Inspect the Data Frame 
+Use **explore()** function to display information about the iMDB DataFrame 
+explore(iMDB)
+## Clean & Prepare the Data
+### Rename Columns for Readability 
+Use **.rename()** method to adjust column names for readability \
+Filter the DataFrame to include select columns \
+Use the **.copy()** method to bypass *SettingWithCopyWarning*
+iMDB = iMDB.rename(columns={
+    "originalTitle": "Title",
+    "contentRating": "Content Rating",
+    "budget": "Budget",
+    "genres": "Primary Genre",
+    "numVotes": "Total Votes",
+    "averageRating": "Average Consumer Rating"
+})
+iMDB_filtered = iMDB[["Title", "Content Rating", "Budget", "Primary Genre", \
+                      "Total Votes", "Average Consumer Rating"]].copy()
+iMDB_filtered
+### Modify Values in Genre Column 
+#### Display the Primary Genre 
+Use a lambda function to return the first genre listed in the genre column \
+Use the **.split()** method to split the genre string and selects the first genre listed after the first single quote \
+The Primary Genre is in position 1 of that list
+iMDB_filtered["Primary Genre"] = iMDB_filtered["Primary Genre"].apply(
+    lambda g: g.split("'")[1]
+)
+iMDB_filtered
+## Create a New Data Frame 
+### Use .notna() and .query() methods 
+Display a DataFrame that shows:\
+     - Content Rating (Filtered by MPAA Ratings Only)\
+     - Primary Genre\
+     - Average Consumer Rating
+genre_ratings = iMDB_filtered[iMDB_filtered["Content Rating"].notna()]
+genre_ratings = genre_ratings.query (
+    "`Content Rating` == 'G' \
+    or `Content Rating` == 'PG' \
+    or `Content Rating` == 'PG-13' \
+    or `Content Rating` == 'R' \
+    or `Content Rating` == 'NC-17'"
+)
+genre_ratings = genre_ratings[["Content Rating", "Primary Genre", "Average Consumer Rating"]]
+genre_ratings
+### Group By Genre 
+#### Use the .groupby() method
+Group the data by the *Primary Genre* \
+Add an aggregate column using the **.agg()** function \
+Format the results so the rating has one decimal 
+genre_ratings = genre_ratings.groupby(["Primary Genre", "Content Rating"]).agg(
+    average_rating=("Average Consumer Rating", "mean"),
+)
+genre_ratings["average_rating"] = genre_ratings["average_rating"].round(1)
+genre_ratings
+## Reshape the Data
+### Melt the Data and Convert to Long Format 
+Data is already in somewhat of a long format above, but use **.melt()** to reformat \
+Reset the index first on *genre_ratings* \
+Notice how the groups are lost and the data seems less clean than before 
+genre_ratings = genre_ratings.reset_index()
+genre_melt = genre_ratings.melt(
+    id_vars=["Primary Genre", "Content Rating"],
+    value_vars="average_rating",
+    var_name="Metric",
+    value_name="Rating"
+)
+genre_melt
+### Pivot the DataFrame
+#### Use the .pivot() method instead 
+Rearrange the data so that each *Content Rating* becomes a column \
+Use *Primary Genre* as the index \
+Use *average_rating* as the values for the DataFrame \
+Compare with the results above
+genre_ratings = genre_ratings.reset_index()
+genre_pivot = genre_ratings.pivot(
+    index="Primary Genre",
+    columns="Content Rating",
+    values="average_rating"
+)
+
+genre_pivot
+## Create another New DataFrame 
+Select Budget and Total Votes as Columns \
+Filter so all NaN values for Budget are Excluded \
+Include aggregates to calcualate *average_budget* and *vote_count* \
+Format results to one decimal
+budget_votes_df = iMDB_filtered[iMDB_filtered["Budget"].notna()]
+budget_votes_df = budget_votes_df.groupby("Primary Genre").agg(
+    average_budget=("Budget", "mean"),
+    vote_count=("Total Votes", "sum")
+)
+budget_votes_df["average_budget"] = budget_votes_df["average_budget"].round(1)
+budget_votes_df
+## Join the DataFrames
+### Combine the Two DataFrames using .merge() 
+Use the **.merge()** method to join the *genre_pivot* and *budget_votes_df* DataFrames \
+Join on *Primary Genre* to match records between both data sources
+combined_df = genre_pivot.merge(
+    budget_votes_df,
+    on="Primary Genre",
+    how="inner"
+)
+
+combined_df
+### Handle Null Values 
+#### Use the .fillna() method 
+Fill the null values to improve readability 
+combined_df = combined_df.fillna("-").reset_index()
+combined_df
+### Set the Index to Primary Genre 
+Use the **.set_index()** method to make *Primary Genre* the index \
+Display the results 
+combined_df = combined_df.set_index("Primary Genre")
+combined_df
+## Preview the Data 
+### Use .plot.pie() to show Vote Count Distribution
+Preview the Data by displaying a pie chart showing the distribution of votes across the different genres \
+Increase the size of the figure to improve readability \
+This could be used to correlate with *average_budget* and *Average Consumer Rating* in future visualizations
+combined_df.groupby('Primary Genre')['vote_count'].sum().plot.pie(figsize=(8, 8))
+plt.ylabel('')
+plt.title('Distribution of Vote Count by Genre')
+## Visualizations
+### Seaborn Visualization 4 - Relationship between Average Rating and Genre
+Use **sns.catplot()** with *kind='bar'* as the visualization \
+Set *Primary Genre* as the Y-axis and *average_rating* as the X-axis \
+Rename the X-axis for readability 
+grouped_ratings = genre_ratings.groupby('Primary Genre')['average_rating'].mean().reset_index()
+m = sns.catplot(data=grouped_ratings, kind='bar', x='average_rating', y='Primary Genre', \
+                legend=False, aspect=1.5, orient='h', hue='Primary Genre')
+for axis in m.axes.flat:
+    axis.set_xlabel('Average Consumer Rating')
+### Save & Export Visualization 4
+Visualization 4 can be interpreted without scaling \
+Use *png* format for visuzalization
+m.savefig('AverageRatingByGenre.png')
+### Seaborn Visualization 5 - Relationship between Average Budget and Vote Count
+Use **sns.relplot()** with *kind='scatter'* \
+Set *average_budget* as the X-axis and *vote_count* as the Y-axis \
+Group the results by genre \
+Resize, relabel, and add style properties to enhace visualization
+budget_votes_df.reset_index()
+figure = sns.relplot(data=budget_votes_df, kind='scatter', x='average_budget', y='vote_count', \
+                     hue='Primary Genre', height=6, aspect=1.5, s=200)
+sns.set_style('darkgrid')
+plt.title('Average Budget vs. Vote Count by Genre')
+plt.xlabel('Average Budget')
+plt.ylabel('Vote Count')
+### Save & Export Visualization 5
+Visualization 5 could benefit from extra scaling ability \
+Use *svg* format for visualization 
+figure.savefig('BudgetVoteCountbyGenre.svg')
