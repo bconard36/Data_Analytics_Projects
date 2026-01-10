@@ -1,0 +1,118 @@
+# Import Statements
+import pyodbc
+import pandas as pd
+import matplotlib.pyplot as plt
+%matplotlib inline
+import seaborn as sns
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+
+# Read CSV data set 
+heart = pd.read_csv('Heart_Dataset_UCI_Updated.csv')
+heart
+
+heart.info()
+
+# heart['cp_typical_angina'] = heart["cp"].apply(lambda x: 1 if x == 0 else 0)
+# heart['cp_atypical_angina'] = heart["cp"].apply(lambda x: 1 if x == 1 else 0)
+# heart['cp_non_anginal'] = heart["cp"].apply(lambda x: 1 if x == 2 else 0)
+# heart['cp_asymptomatic'] = heart["cp"].apply(lambda x: 1 if x == 3 else 0)
+# heart = heart.drop(columns=["cp"])
+# heart
+dummy_heart = pd.get_dummies(heart["cp"], prefix="cp").astype(int)
+dummy_heart = dummy_heart.rename(columns={
+    "cp_0": "cp_typical_angina",
+    "cp_1": "cp_atypical_angina",
+    "cp_2": "cp_non_anginal",
+    "cp_3": "cp_asymptomatic"
+})
+dummy_heart = pd.concat([heart.drop(columns=["cp"]), dummy_heart], axis=1)
+dummy_heart
+
+heart_corr = dummy_heart.corr()
+
+plt.figure(figsize=(14,6), dpi=96)
+sns.heatmap(heart_corr, annot=True, cmap="Reds")
+plt.title("Correlation Heatmap of Heart Dataset")
+plt.show()
+
+sns.heatmap(
+    data=heart_corr[['target']].sort_values('target', ascending=False), 
+    annot=True, cmap='Reds', 
+    vmin=-1.0, 
+    vmax=1.0, 
+    cbar=False, 
+    fmt='.2f'
+)
+
+sns.pairplot(dummy_heart[['cp_typical_angina', 'thalach', 'exang', 'oldpeak', 'slope', 'target']], hue='target')
+plt.show()
+
+X = heart.drop(columns=["target"])
+y = heart["target"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.10, random_state=42
+)
+display(X_train)
+display(X_test)
+display(y_train)
+display(y_test)
+
+target_model = LinearRegression()
+target_model.fit(X_train, y_train)
+print("Coefficients:", target_model.coef_)
+print("Intercept:", target_model.intercept_)
+
+target_predict = pd.DataFrame(target_model.predict(X_test))
+target_predict = target_predict.join(X_test.reset_index(drop=True))
+target_predict
+
+score = target_model.score(X_test, y_test)
+score
+
+corr_target = dummy_heart.corr()["target"].drop("target").sort_values(key=abs, ascending=False)
+y = dummy_heart["target"]
+corr_target.head(10)
+
+top4 = corr_target.head(4).index.tolist()
+top4
+
+top4_corr_values = corr_target[top4] 
+plt.figure(figsize=(8,4))
+sns.barplot(x=top4_corr_values.index, y=top4_corr_values.values, hue=top4_corr_values, legend=False)
+plt.title("Top 4 Features Most Correlated with Target")
+plt.ylabel("Correlation with Target")
+plt.xlabel("")
+plt.show()
+
+X2 = dummy_heart[top4]
+y = dummy_heart["target"]
+
+X2_train, X2_test, y2_train, y2_test = train_test_split(
+    X2, y, test_size=0.10, random_state=42
+)
+
+model_top4 = LinearRegression()
+model_top4.fit(X2_train, y2_train)
+print("Coefficients:", model_top4.coef_)
+print("Intercept:", model_top4.intercept_)
+
+pred_top4 = model_top4.predict(X2_test)
+pred_top4_df = pd.DataFrame({
+    "Actual": y2_test.reset_index(drop=True),
+    "Predicted": pred_top4
+})
+pred_top4_df.head(10)
+
+score_top4 = model_top4.score(X2_test, y2_test)
+score_top4
+
+plt.figure(figsize=(6,6))
+sns.scatterplot(x=y2_test, y=pred_top4)
+plt.plot([0, 1], [0, 1], 'r--')
+plt.xlabel("Actual Target")
+plt.ylabel("Predicted Target")
+plt.title("Predicted vs Actual Target (Top 4 Features Model)")
+plt.show()
