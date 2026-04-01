@@ -1,4 +1,4 @@
--- Challenge Query 
+-- Challenge Query - 4/1/26
 -- Identify patients who are both high-risk and high-cost. 
 -- A patient is considered high-risk if they have more than 3 diagnoses across all dx columns. 
 -- A patient is considered high-cost if their total hospital charges exceed the 
