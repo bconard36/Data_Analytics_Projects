@@ -1,4 +1,4 @@
--- Subquery Practice 
+-- Subquery Practice - 3/31/26
 -- Prompt 1:
 -- Return all patients whose BMI is higher than the average BMI across all patients
 -- Show their patient ID, age, BMI, and insurance type
