@@ -15,4 +15,4 @@ Python projects were completed using JupyterLabs and Anaconda; SQL projects comp
 - JupyterLabs
 - Anaconda
 
-## This repository is actively maintained and continuously updated as new projects and coursework are completed. 
+* This repository is actively maintained and continuously updated as new projects and coursework are completed. *
