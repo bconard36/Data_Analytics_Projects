@@ -4,6 +4,7 @@ This portfolio of data analytics assignments and projects demonstrates hands-on 
 Python projects were completed using JupyterLabs and Anaconda; SQL projects completed in DataGrip, using sqliteonline.com, and some in JupyterLabs & Anaconda.
 
 # Folder List 
+- DataCleaning - A clean, structured, organized SQL file that cleans an intentionally dirty dataset, implementing categorical and conditional value adjustments, data type conversion, and separation of recordsets
 - Healthcare Dataset - An in-depth, realistic analysis project using multiple tables from a dataset
 - Python Projects - A collection of files analyzing datasets using Python, progressing from simple queries and file uploads to complex visualizations using external modules like numpy and seaborn.
 - SQL Projects - SQL queries and projects, written in DataGrip, covering skills in CTEs, aggregate functions, subqueries, and database creation. 
