@@ -1,19 +1,70 @@
 # Data_Analytics_Projects
-A process-oriented, self-motivated student graduating in Spring 2026 with an AAS in Web Development & Design and a Database Design and SQL Certificate. 
-This portfolio of data analytics assignments and projects demonstrates hands-on practice and experience with data validation, data cleaning, and data visualization. Projects show skills in SQL, Python, and visualization tools like Tableau, Pandas, numpy, seaborn, and more. 
-Python projects were completed using JupyterLabs and Anaconda; SQL projects completed in DataGrip, using sqliteonline.com, and some in JupyterLabs & Anaconda.
+This repository serves as my data analytics portfolio, showcasing projects that demonstrate practical skills in SQL, Python, data cleaning, data transformation, exploratory data analysis (EDA), and data visualization.
+
+The collection includes projects ranging from database design and advanced SQL programming to Python-based data analysis and interactive Tableau dashboards. While many of these projects originated through formal coursework, each has been refined and organized to highlight the technical and analytical skills used in real-world business and data analysis.
+
+As I continue developing my skills and completing new projects, this repository is regularly updated with additional analyses, dashboards, and SQL solutions.
+
+# Technical Skills Demonstrated 
+- SQL querying and database design
+- Advanced SQL (CTEs, window functions, subqueries)
+- PL/SQL and T-SQL programming
+- Stored procedures, triggers, and transaction processing
+- Data cleaning and transformation
+- Exploratory Data Analysis (EDA)
+- Data validation and quality assurance
+- Data visualization and dashboard design
+- Business reporting and analytical problem solving
 
 # Folder List 
-- DataCleaning - A clean, structured, organized SQL file that cleans an intentionally dirty dataset, implementing categorical and conditional value adjustments, data type conversion, and separation of recordsets
-- Healthcare Dataset - An in-depth, realistic analysis project using multiple tables from a dataset
-- Python Projects - A collection of files analyzing datasets using Python, progressing from simple queries and file uploads to complex visualizations using external modules like numpy and seaborn.
-- SQL Projects - SQL queries and projects, written in DataGrip, covering skills in CTEs, aggregate functions, subqueries, and database creation. 
-- Tableau Projects - A collection of complex and appealing dashboards created in Tableau desktop that showcase analytical skills as well as communication, presentation, and design skills
-
-# Tools Used 
-- sqliteonline.com and PGlite for Window Function compatability
-- DataGrip
-- JupyterLabs
+- PLSQL_Advanced_SQL - Advanced SQL programming projects demonstrating procedural database development using Oracle PL/SQL and SQL Server T-SQL, including:
+      - Stored procedures
+      - Functions
+      - Triggers
+      - Exception handling
+      - Transaction management
+      - Input validation
+      - Commit/Rollback processing
+- DataCleaning - SQL scripts focused on preparing raw datasets for analysis through:
+      - Data cleansing
+      - Standardization
+      - Type conversion
+      - Duplicate handling
+      - Missing value management
+      - Conditional updates
+- Healthcare Dataset - A multi-table analytical case study exploring healthcare data through joins, aggregations, filtering, and reporting to answer realistic business questions.
+- Python Projects - Data analysis projects built with Python and Jupyter Notebook covering:
+      - Data import and preprocessing
+      - Exploratory data analysis
+      - Statistical summaries
+      - Data visualization
+      - NumPy
+      - Pandas
+      - Matplotlib
+      - Seaborn
+- SQL Projects - A collection of SQL exercises and analytical projects demonstrating:
+      - Complex joins
+      - Aggregate functions
+      - Window functions
+      - Common Table Expressions (CTEs)
+      - Subqueries
+      - Database creation
+      - Query optimization techniques 
+- Tableau Projects - Interactive dashboards designed to communicate business insights through effective visualization, storytelling, and dashboard design.
+  
+# Technologies
+- SQL
+- SQL Server
+- Oracle Database
+- PL/SQL
+- T-SQL
+- Python
+- Pandas
+- NumPy
+- Matplotlib
+- Seaborn
+- Tableau
+- Jupyter Notebook
 - Anaconda
 
-_This repository is actively maintained and continuously updated as new projects and coursework are completed._
+_This repository is actively maintained as I continue expanding my analytics portfolio with new SQL, Python, Tableau, and business analysis projects._
