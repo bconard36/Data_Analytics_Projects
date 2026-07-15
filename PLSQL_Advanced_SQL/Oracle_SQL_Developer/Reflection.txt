@@ -1,0 +1,8 @@
+So far, the Oracle process has been relatively seamless to adapt to coming from SQL Server. I did 
+have to adjust to a new interface - I used DataGrip in CIS275 - though that happened quickly and 
+caused no real hindrances. The main challenges I've encountered have been the syntax differences
+between the two environments. For example, I spent about 20 minutes debugging Q8 because of an 
+errant AS keyword on a table alias in a JOIN - a small reminder to pay attention to the details. 
+As someone about to graduate and actively working toward a career in data analytics, I genuinely 
+enjoy working through these kinds of nuances. This lab took me approximately 2 hours to complete, 
+during which I revisited lecture notes, textbook chapters, and previous labs for reference. 
