@@ -54,6 +54,7 @@ As I continue developing my skills and completing new projects, this repository 
   
 # Technologies
 - SQL
+- SQLite Online
 - SQL Server
 - Oracle Database
 - PL/SQL
