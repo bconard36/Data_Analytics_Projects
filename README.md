@@ -6,7 +6,7 @@ The collection includes projects ranging from database design and advanced SQL p
 
 As I continue developing my skills and completing new projects, this repository is regularly updated with additional analyses, dashboards, and SQL solutions.
 
-**Interactive dashboards:** [Tableau Public profile — add link here]
+**Interactive dashboards:** https://public.tableau.com/app/profile/billy.conard/vizzes
 
 ## Technical Skills Demonstrated
 
