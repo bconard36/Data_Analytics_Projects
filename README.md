@@ -36,13 +36,13 @@ As I continue developing my skills and completing new projects, this repository 
   - Missing/invalid value management
   - Conditional updates
   - A worked example: cleaning, analyzing, and visualizing a cafe sales dataset end-to-end (see folder README for the full writeup and dashboard link)
-- **[Healthcare Dataset](./Healthcare%20Dataset/)** — A multi-table analytical case study exploring healthcare data through joins, aggregations, filtering, and reporting to answer realistic business questions.
-- **[Python Projects](./Python%20Projects/)** — Data analysis projects built with Python and Jupyter Notebook covering:
+- **[Healthcare Dataset](./HealthcareDataset/)** — A multi-table analytical case study exploring healthcare data through joins, aggregations, filtering, and reporting to answer realistic business questions.
+- **[Python Projects](./PythonProjects/)** — Data analysis projects built with Python and Jupyter Notebook covering:
   - Data import and preprocessing
   - Exploratory data analysis
   - Statistical summaries
   - Data visualization (NumPy, Pandas, Matplotlib, Seaborn)
-- **[SQL Projects](./SQL%20Projects/)** — A collection of SQL exercises and analytical projects demonstrating:
+- **[SQL Projects](./SQL_Projects/)** — A collection of SQL exercises and analytical projects demonstrating:
   - Complex joins
   - Aggregate functions
   - Window functions
@@ -50,7 +50,7 @@ As I continue developing my skills and completing new projects, this repository 
   - Subqueries
   - Database creation
   - Query optimization techniques
-- **[Tableau Projects](./Tableau%20Projects/)** — Interactive dashboards designed to communicate business insights through effective visualization, storytelling, and dashboard design. *(Workbook files are not stored directly in this repo — GitHub can't render `.twbx` files; each project's README links out to its live Tableau Public dashboard instead.)*
+- **[Tableau Projects](./TableauProjects/)** — Interactive dashboards designed to communicate business insights through effective visualization, storytelling, and dashboard design. *(Workbook files are not stored directly in this repo — GitHub can't render .twbx files; each project's README links out to its live Tableau Public dashboard instead.)*
 
 ## Technologies
 
