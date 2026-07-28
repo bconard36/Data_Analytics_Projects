@@ -1,6 +1,6 @@
 # DataCleaning
 
-This folder contains an intentionally dirty dataset (sourced from Kaggle), used for practicing data cleaning, validation, and exploratory analysis in SQL. Values were profiled, standardized, and corrected based on conditional logic and column-specific rules. A single source-of-truth flag separates valid transactions from invalid ones for downstream querying, and the cleaned data was carried into a set of analysis queries and an interactive Tableau dashboard.
+This folder contains an intentionally dirty dataset (sourced from Kaggle), used for practicing data cleaning, validation, and exploratory analysis in SQL (SQLite). Values were profiled, standardized, and corrected based on conditional logic and column-specific rules. A single source-of-truth flag separates valid transactions from invalid ones for downstream querying, and the cleaned data was carried into a set of analysis queries and an interactive Tableau dashboard.
 
 ## Original Dataset Specifications
 
