@@ -40,4 +40,4 @@ Tracks revenue and volume trends across the 12 months of the dataset.
 - Tableau Public — dashboard building and publishing
 
 ---
-*Part of the [Data Analytics Projects](../) portfolio repository.*
+*Part of the [Data Analytics Projects](../../../) portfolio repository.*
