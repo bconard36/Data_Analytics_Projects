@@ -1,5 +1,5 @@
 /* 
-============================================
+================================================================
 DATA CLEANING PRACTICE - dirty_cafe_sales dataset
 
 GOAL: 
@@ -9,13 +9,17 @@ GOAL:
 - Validate cleaning steps after transformation 
 
 NOTE:
-- This dataset is intentionally "dirty" for practice purposes. 
-=============================================
+- This dataset being queried was intentionally "dirty" for practice purposes. 
+================================================================
 */
 
 /* ==========================================
 STEP 1 - EXPLORATORY ANALYSIS (DATA PROFILING)
 =========================================== */ 
+-- Inspect DataSet to examine values 
+SELECT *
+FROM dirty_cafe_sales;
+
 -- Check how many rows have invalid or placeholder values exist in price_per_unit column
 SELECT COUNT(*)
 FROM   dirty_cafe_sales
@@ -26,7 +30,7 @@ WHERE price_per_unit = ''
 -- Check how many invalid values exist across ALL major columns
 SELECT COUNT(*)
 FROM   dirty_cafe_sales
-WHERE (item = '' OR item = 'ERROR' OR item = 'UNKNOWN')
+WHERE (TRIM(item) = '' OR TRIM(item) = 'ERROR' OR TRIM(item) = 'UNKNOWN')
   OR (quantity = '' OR quantity = 'ERROR' OR quantity = 'UNKNOWN')
   OR (price_per_unit = '' OR price_per_unit = 'ERROR' OR price_per_unit = 'UNKNOWN')
   OR (total_spent = '' OR total_spent = 'ERROR' OR total_spent = 'UNKNOWN')
@@ -35,9 +39,13 @@ WHERE (item = '' OR item = 'ERROR' OR item = 'UNKNOWN')
   OR (transaction_date = '' OR transaction_date = 'ERROR' OR transaction_date = 'UNKNOWN');
 
 -- Check for naming inconsistencies in item column using partial string match 
-SELECT *
+SELECT item
 FROM dirty_cafe_sales
 WHERE LOWER(item) LIKE 'c%';
+
+SELECt item
+FROM dirty_cafe_sales
+WHERE LOWER(item) LIKE 's%';
   
 -- Column-level data quality summary (binary count of bad vs good values)
 SELECT SUM(CASE 
@@ -78,39 +86,44 @@ GROUP BY item;
 -- For missing/empty string values, update to MISSING 
 -- For UNKNOWN values, keep as ITEM_UNKNOWN
 -- For ERROR values, update to ITEM_ERROR
-UPDATE dirty_cafe_sales
-SET    item = CASE
-		WHEN item = '' THEN 'MISSING'
-		WHEN LOWER(item) = 'unknown' then 'ITEM_UNKNOWN'
-    	WHEN LOWER(item) = 'error' THEN 'ITEM_ERROR'
-        ELSE item
-    	END,
--- Standardize price_per_unit values based on item reference
-       price_per_unit = CASE
-		WHEN item = 'Cake' THEN '3.0'
-        WHEN item = 'Coffee' THEN '2.0'
-        WHEN item = 'Cookie' THEN '1.0'
-        WHEN item = 'Juice' THEN '3.0'
-        WHEN item = 'Salad' THEN '5.0'
-        WHEN item = 'Sandwich' THEN '4.0'
-        WHEN item = 'Smoothie' then '4.0'
-        WHEN item = 'Tea' THEN '1.5'
-        WHEN LOWER(item) = 'missing' THEN 'N/A'
-        WHEN LOWER(item) = 'item_unknown' Then 'N/A'
-        WHEN LOWER(item) = 'item_error' THEN 'N/A'
-	END 
-WHERE item IN ('Cake', 'Coffee', 'Cookie', 'Juice', 'Salad', 'Sandwich', 'Smoothie', 'Tea')
-    OR item = '' 
-    OR LOWER(item) = 'error' 
-    OR LOWER(item) = 'unknown';
+BEGIN TRANSACTION; 
+  UPDATE dirty_cafe_sales
+  SET    item = CASE
+            WHEN item = '' THEN 'Item Missing'
+            WHEN LOWER(item) = 'unknown' then 'Item Unknown'
+            WHEN LOWER(item) = 'error' THEN 'Item Error'
+            ELSE item
+            END,
+    -- Use original item values for price_per_unit updates
+    -- Item values only updated after entire statement runs 
+    -- All invalid price values will be NULL
+           price_per_unit = CASE
+            WHEN item = 'Cake' THEN '3.0'
+            WHEN item = 'Coffee' THEN '2.0'
+            WHEN item = 'Cookie' THEN '1.0'
+            WHEN item = 'Juice' THEN '3.0'
+            WHEN item = 'Salad' THEN '5.0'
+            WHEN item = 'Sandwich' THEN '4.0'
+            WHEN item = 'Smoothie' then '4.0'
+            WHEN item = 'Tea' THEN '1.5'
+            WHEN item = '' THEN NULL
+            WHEN item = 'UNKNOWN' Then NULL
+            WHEN item = 'ERROR' THEN NULL
+        END 
+    WHERE item IN ('Cake', 'Coffee', 'Cookie', 'Juice', 'Salad', 'Sandwich', 'Smoothie', 'Tea')
+        OR item = '' 
+        OR LOWER(item) = 'error' 
+        OR LOWER(item) = 'unknown';
+COMMIT;
+
     
 -- VALIDATION: Ensure no remmaining bad values exist 
 -- EXPECTED RESULT: 0
 SELECT COUNT(*)
 FROM   dirty_cafe_sales
-WHERE price_per_unit = ''
-	OR price_per_unit = 'ERROR'
-    OR price_per_unit = 'UNKNOWN';
+WHERE price_per_unit = '' 
+	OR LOWER(price_per_unit) = 'unknown'
+    OR LOWER(price_per_unit) = 'error';
 
 /* ==========================================
 STEP 3 - DATA CLEANING - LOCATION 
@@ -135,27 +148,30 @@ FROM dirty_cafe_sales
 WHERE location IS NULL; -- 0
 
 -- Standardize Location Values
--- For missing/empty string values, update to MISSING 
--- For ERROR values, update to DATA_ERROR 
--- For UNKNOWN values, keep as UNKNOWN
-UPDATE dirty_cafe_sales
-SET location = CASE 
-		WHEN location = '' THEN 'MISSING'
-        WHEN LOWER(location) = 'error' THEN 'DATA_ERROR'
-        WHEN LOWER(location) = 'unknown' THEN 'UNKNOWN'
-    END
-WHERE location = '' 
-	OR LOWER(location) = 'error' 
-    OR LOWER(location) = 'unknown';
+-- For missing/empty string values, update to Missing Location 
+-- For ERROR values, update to Location Error 
+-- For UNKNOWN values, keep as Unknown Location
+BEGIN TRANSACTION; 
+
+  UPDATE dirty_cafe_sales
+  SET location = CASE 
+          WHEN location = '' THEN 'Location Missing'
+          WHEN LOWER(location) = 'error' THEN 'Location Error'
+          WHEN LOWER(location) = 'unknown' THEN 'Location Unknown'
+      END
+  WHERE location = '' 
+      OR LOWER(location) = 'error' 
+      OR LOWER(location) = 'unknown';
+      
+COMMIT;
     
 -- Post-cleaning validation: Ensure no remaining bad values exist
--- Counts with value of UNKNOWN will remain unchanged because the name is the same!
 SELECT location, 
 	   COUNT(*)
 FROM dirty_cafe_sales
 WHERE location = '' -- Expected - 0 missing values now
 	OR LOWER(location) = 'error' -- Expected - 0 ERROR values 
-    OR LOWER(location) = 'unknown' -- Expected - 338 UNKNOWN values 
+    OR LOWER(location) = 'unknown' -- Expected - 0 UNKNOWN values 
 GROUP BY location;
 
 /* ==========================================
@@ -179,15 +195,19 @@ GROUP BY payment_method;
 -- For missing/empty string values, update to MISSING 
 -- For ERROR values, update to PMT_ERROR 
 -- For UNKNOWN values, keep as UNKNOWN
-UPDATE dirty_cafe_sales
-SET payment_method = CASE 
-		WHEN payment_method = '' THEN 'MISSING'
-        WHEN LOWER(payment_method) = 'error' THEN 'PMT_ERROR'
-        WHEN LOWER(payment_method) = 'unknown' THEN 'UNKNOWN'
-    END
-WHERE payment_method = '' 
-	OR LOWER(payment_method) = 'error' 
-    OR LOWER(payment_method) = 'unknown';
+BEGIN TRANSACTION;
+
+  UPDATE dirty_cafe_sales
+  SET payment_method = CASE 
+          WHEN payment_method = '' THEN 'Pmt Missing'
+          WHEN LOWER(payment_method) = 'error' THEN 'Pmt Error'
+          WHEN LOWER(payment_method) = 'unknown' THEN 'Pmt Unknown'
+      END
+  WHERE payment_method = '' 
+      OR LOWER(payment_method) = 'error' 
+      OR LOWER(payment_method) = 'unknown';
+      
+COMMIT;
     
 -- Post-cleaning validation: Ensure no remaining bad values exist
 -- Counts with value of UNKNOWN will remain unchanged because the name is the same!
@@ -200,27 +220,7 @@ WHERE payment_method = '' -- Expected - 0 missing values now
 GROUP BY payment_method;
 
 /* ==========================================
-STEP 5 - DATA CLEANING - TOTAL SPENT 
-=========================================== */
--- UPDATE all total_spent values for VALID payment methods only 
--- Invalid payment methods cannot be charged, meaning total_spent is invalid.
--- CAST price_per_unit and quantity as DECIMAL for currency 
-UPDATE dirty_cafe_sales
-SET total_spent = CASE
-		WHEN LOWER(payment_method) = 'cash'
-        	OR LOWER(payment_method) = 'credit card'
-            OR LOWER(payment_method) = 'digital wallet'
-        	THEN (CAST(price_per_unit AS DECIMAL(10, 2)) * CAST(quantity AS INT)) 
-		END;
--- Validate Updates based on logic above 
-SELECT payment_method,
-	   quantity,
-	   price_per_unit,
-       total_spent
-FROM dirty_cafe_sales;
-
-/* ==========================================
-STEP 6 - DATA CLEANING - QUANTITY 
+STEP 5 - DATA CLEANING - QUANTITY 
 =========================================== */
 -- Total of 479 invalid quantity values discovered after updating total_spent
 -- Same values as other columns: '', 'UNKNOWN', 'ERROR'.
@@ -238,24 +238,18 @@ SELECT quantity,
 	   total_spent
 FROM dirty_cafe_sales;
 
--- UPDATE total_spent first, then address quantity discrepancies 
-UPDATE dirty_cafe_sales
-SET total_spent = CASE
-	WHEN quantity = '' 
-    	OR LOWER(quantity) = 'error'
-        OR LOWER(quantity) = 'unknown'
-    THEN 'N/A'
-    ELSE total_spent
-    END;
+BEGIN TRANSACTION; 
     
-UPDATE dirty_cafe_sales
-SET quantity = CASE
-	WHEN quantity = '' 
-    	OR LOWER(quantity) = 'error'
-        OR LOWER(quantity) = 'unknown'
-    THEN 'N/A'
-    ELSE quantity
-    END;
+  UPDATE dirty_cafe_sales
+  SET quantity = CASE
+      WHEN quantity = '' 
+          OR LOWER(quantity) = 'error'
+          OR LOWER(quantity) = 'unknown'
+      THEN NULL
+      ELSE quantity
+      END;
+      
+COMMIT;
     
 -- Run the same validation query to confirm changes 
 SELECT quantity,
@@ -268,6 +262,31 @@ WHERE quantity = ''
 
 -- Inspect All Columns 
 SELECT *
+FROM dirty_cafe_sales;
+
+/* ==========================================
+STEP 6 - DATA CLEANING - TOTAL SPENT 
+=========================================== */
+-- UPDATE all total_spent values for VALID payment methods only 
+-- Invalid payment methods cannot be charged, meaning total_spent is invalid.
+-- CAST price_per_unit and quantity as DECIMAL for currency 
+BEGIN TRANSACTION;
+
+  UPDATE dirty_cafe_sales
+  SET total_spent = CASE
+          WHEN LOWER(payment_method) = 'cash'
+              OR LOWER(payment_method) = 'credit card'
+              OR LOWER(payment_method) = 'digital wallet'
+              THEN (CAST(price_per_unit AS DECIMAL(10, 2)) * CAST(quantity AS INT)) 
+          END;
+          
+COMMIT;
+
+-- Validate Updates based on logic above 
+SELECT payment_method,
+	   quantity,
+	   price_per_unit,
+       total_spent
 FROM dirty_cafe_sales;
 
 /* ======================================
@@ -291,14 +310,18 @@ WHERE  transaction_date = ''
 -- As expected, no nulls - dates could be backtracked by transaction ID
 -- Same invalid values found (ERROR, UNKNOWN, '')
 -- UPDATE invalid values
-UPDATE dirty_cafe_sales
-SET transaction_date = CASE 
-	WHEN transaction_date = ''
-    OR LOWER(transaction_date) = 'error'
-    OR LOWER(transaction_date) = 'unknown'
-    THEN 'N/A'
-    ELSE transaction_date
-	END;
+BEGIN TRANSACTION; 
+
+  UPDATE dirty_cafe_sales
+  SET transaction_date = CASE 
+      WHEN transaction_date = ''
+      OR LOWER(transaction_date) = 'error'
+      OR LOWER(transaction_date) = 'unknown'
+      THEN 'N/A'
+      ELSE transaction_date
+      END;
+      
+COMMIT;
     
 -- Validation Check - Should Return 0
 SELECT COUNT(*)
@@ -307,39 +330,127 @@ WHERE  transaction_date = ''
     OR LOWER(transaction_date) = 'error'
     OR LOWER(transaction_date) = 'unknown';
 
+/* ======================================
+STEP 8 - DATA CLEANING - CTEs for Querying 
+========================================= */
 -- Inspect All Values 
 SELECT *
 FROM   dirty_cafe_sales;
 
--- Write CTE for Invalid Values 
-WITH ErrorRecords AS (
-	SELECT * 
-  	FROM   dirty_cafe_sales
-    WHERE  LOWER(item) IN ('missing', 'item_unknown', 'item_error')
-  		OR quantity = 'N/A'
-  		OR price_per_unit = 'N/A'
-  		OR total_spent IS NULL
-  		OR total_spent = 'N/A'
-  		OR payment_method IN ('PMT_ERROR', 'UNKNOWN', 'MISSING')
-  	    OR location IN ('DATA_ERROR', 'UNKNOWN', 'MISSING')
-        OR transaction_date = 'N/A'
-)
--- Inspect all ErrorRecords and ensure consistency across placeholders
-SELECT *
-FROM ErrorRecords;
+-- Updated, cleaner CTE Structure for Invalid Values 
+-- Start by spot-checking transactionIDs for uniqueness
+SELECT transaction_id, 
+	   COUNT(*) 
+FROM   dirty_cafe_sales
+GROUP BY transaction_id
+HAVING COUNT(*) > 1;
 
--- Write CTE for Valid Values
-WITH ValidRecords AS (
-	SELECT *
-  	FROM dirty_cafe_sales
-  	WHERE LOWER(item) NOT IN ('missing', 'item_unknown', 'item_error')
-  		AND quantity <> 'N/A'
-  		AND price_per_unit <> 'N/A'
-  		AND total_spent IS NOT NULL
-  		AND payment_method NOT IN ('PMT_ERROR', 'UNKNOWN', 'MISSING')
-  	    AND location NOT IN ('DATA_ERROR', 'UNKNOWN', 'MISSING')
-  		AND transaction_date <> 'N/A'
+-- Define the bad value list ONCE and reference it in both valid and invalid values 
+WITH BadRecords AS (
+ 	SELECT transaction_id
+  	FROm   dirty_cafe_sales
+  	WHERE LOWER(item) IN ('item missing', 'item unknown', 'item error')
+  		OR quantity IS NULL
+  		OR price_per_unit IS NULL
+  		OR total_spent IS NULL
+  		OR LOWER(payment_method) IN ('pmt error', 'pmt unknown', 'pmt missing')
+  	    OR LOWER(location) IN ('location error', 'location unknown', 'location missing')
+        OR transaction_date = 'N/A'
+ )
+ 
+ -- Transaction IDs are unique — LEFT JOIN with dirty_cafe_sales to find bad values 
+ SELECT d.*, 
+ 	    (b.transaction_id IS NOT NULL) AS is_bad
+ FROM   dirty_cafe_sales d
+ LEFT JOIN BadRecords b 
+ 	ON d.transaction_id = b.transaction_id;
+
+/* ======================================
+STEP 9 - DATA QUERYING 
+========================================= */
+-- 1. Which items generate the most total revenue, and which the least? 
+SELECT item,
+	   COUNT(*) as TransactionCount,
+       SUM(CAST(quantity AS INTEGER)) AS UnitsSold,
+	   SUM(total_spent) AS TotalRevenue,
+       ROUND(AVG(total_spent), 2) AS AvgTransactionValue
+FROM   dirty_cafe_sales
+WHERE  item NOT IN ('Item Missing', 'Item Unknown', 'Item Error')
+	AND total_spent IS NOT NULL
+GROUP BY item
+ORDER BY TotalRevenue DESC;
+
+-- 2. Which items sell the highest volume (units), and does that ranking match the revenue ranking from above?
+WITH item_summary AS (
+  SELECT item,
+  	     SUM(CAST(quantity AS INTEGER)) AS UnitsSold,
+  	     SUM(total_spent) AS TotalRevenue
+  FROM   dirty_cafe_sales
+  WHERE item NOT IN ('Item Missing', 'Item Unknown', 'Item Error')
+  	AND total_spent IS NOT NULL
+  GROUP BY item
 )
--- Inspect all ValidRecords and ensure no placeholder values 
+SELECT item,
+	   UnitsSold,
+       TotalRevenue,
+       RANK() OVER (ORDER BY TotalRevenue DESC) AS RevenueRank,
+       RANK() OVER (ORDER BY UnitsSold DESC) AS VolumeRank
+FROM item_summary
+ORDER BY RevenueRank;
+
+-- 3. What percentage of total revenue does each item contribute?
+SELECT item,
+       SUM(total_spent) AS ItemRevenue,
+       ROUND(100.0 * SUM(total_spent) / SUM(SUM(total_spent)) OVER (), 2) AS PercentageOfTotal
+FROM   dirty_cafe_sales
+WHERE item NOT IN ('Item Missing', 'Item Unknown', 'Item Error')
+  	AND total_spent IS NOT NULL
+GROUP BY item
+ORDER BY ItemRevenue DESC;
+       
+-- 4. What is the average transaction value per item 
+SELECT item,
+	   ROUND(AVG(total_spent), 2) AS AverageTransactionValue
+FROm   dirty_cafe_sales
+WHERE item NOT In ('Item Missing', 'Item Unknown', 'Item Error')
+  	AND total_spent IS NOT NULL
+GROUP BY item
+ORDER BY AverageTransactionValue DESC;
+
+-- 5. Because of bad item names and invalid total spent values,
+-- how many rows (and what % of the dataset) had to be excluded from this analysis?
+SELECT COUNT(*) 
+FROM dirty_cafe_sales;
+
+SELECT SUM(
+  	CASE WHEN item IN ('Item Missing', 'Item Unknown', 'Item Error') 
+  		OR total_spent IS NULL THEN 1 ELSE 0 END) AS ExcludedRows,
+    COUNT(*) AS TotalRows,
+    ROUND(100.0 * SUM(CASE WHEN item IN ('Item Missing', 'Item Unknown', 'Item Error') 
+  		OR total_spent IS NULL THEN 1 ELSE 0 END) / COUNT(*), 1) AS PercentExcluded
+FROM   dirty_cafe_sales;
+
+-- 6. Do the top-selling items differ between In-store and Takeaway locations? 
+SELECT item,
+  	   location,
+	   COUNT(*) as TransactionCount,
+       SUM(CAST(quantity AS INTEGER)) AS UnitsSold,
+	   SUM(total_spent) AS TotalRevenue,
+       ROUND(AVG(total_spent), 2) AS AvgTransactionValue,
+       RANK() OVER (PARTITION BY location ORDER BY SUM(total_spent) DESC) AS LocationRank
+FROM   dirty_cafe_sales
+WHERE  item NOT IN ('Item Missing', 'Item Unknown', 'Item Error')
+  	AND location IN ('In-store', 'Takeaway')
+GROUP BY item, location
+ORDER BY location, TotalRevenue DESC;
+
+-- GO  -- Will throw an error in SQLite. Keep for SQL Server Porting 
+-- Final step: expose a clean, query-ready view for all downstream analysis
+CREATE VIEW clean_sales AS
 SELECT *
-FROM ValidRecords;
+FROM dirty_cafe_sales
+WHERE item NOT IN ('Item Missing', 'Item Unknown', 'Item Error')
+  AND total_spent IS NOT NULL;
+  
+SELECT *
+FROM clean_sales;
