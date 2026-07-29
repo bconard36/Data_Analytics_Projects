@@ -1,6 +1,6 @@
 # Patient Hypertension & BMI Analysis — Tableau Dashboard
 
-An exploratory Tableau workbook analyzing hypertension prevalence and BMI trends across exercise level, age, and gender, built on a synthetic patient health dataset originally sourced from Kaggle. Early exploration used SQL queries written against the raw dataset (see the [DataCleaning](../../HealthcareDataset/) folder, if applicable, for that groundwork) before moving into Tableau Public for visualization and calculated-field analysis.
+An exploratory Tableau workbook analyzing hypertension prevalence and BMI trends across exercise level, age, and gender, built on a synthetic patient health dataset originally sourced from Kaggle. Early exploration used SQL queries written against the raw dataset (see the [Healthcare Dataset](../../HealthcareDataset/) folder, if applicable, for that groundwork) before moving into Tableau Public for visualization and calculated-field analysis.
 
 **Live dashboard:** https://public.tableau.com/app/profile/billy.conard/viz/PatientMedicationOutcomeAnalysis/BloodPressureBreakdownbyExerciseLevel#1
 
