@@ -52,4 +52,4 @@ Compares artist composition across genre, streaming role (lead vs. feature), and
 - VS Code & DuckDB (SQL) — data validation and exploratory queries
 - Tableau Public — dashboard building and publishing
 
-Part of the Data Analytics Projects portfolio repository.
+*Part of the [Data Analytics Projects](../../) portfolio repository.*
