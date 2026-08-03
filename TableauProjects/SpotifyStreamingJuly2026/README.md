@@ -3,6 +3,7 @@
 An interactive Tableau workbook analyzing the most-streamed artists on Spotify for July 2026, built on top of a SQL-validated dataset (see the DataValidation section below for the full consistency-checking process). The workbook compares performance across genre, geography, role, and demographics, and documents a few data-integrity findings caught and resolved during development.
 
 **Live dashboard:** [[Spotify Streaming and Artist Composition — July 2026]](https://public.tableau.com/app/profile/billy.conard/viz/SpotifyAnalysis2026/July26StreamingSpecs#1)
+
 **Tableau Public profile:** [[Billy Conard]](https://public.tableau.com/app/profile/billy.conard/vizzes)
 
 ## Data Note
